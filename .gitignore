@@ -1,0 +1,38 @@
+# --- IDE ---
+# Eclipse
+.settings/
+.classpath
+.project
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+# VS Code
+.vscode/
+#cursor
+.cursor/
+# NetBeans
+nbproject/
+nbbuild/
+dist/
+build/
+
+# --- Maven ---
+target/
+*.jar
+*.war
+*.ear
+
+# --- Spring Boot ---
+*.log
+*.log.*
+
+# --- Java ---
+*.class
+hs_err_pid*
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+*~
