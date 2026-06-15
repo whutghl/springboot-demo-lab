@@ -180,10 +180,10 @@ BF.EXISTS bloom:user:ids "1001"
 ### 5.1 redis-cli 验证 BF.RESERVE
 
 ```bash
-redis-cli -p 16379 -a ghl
+redis-cli -p 6379 -a 123456
 
 # 1. 查看布隆过滤器信息
-127.0.0.1:16379> BF.INFO bloom:user:ids
+127.0.0.1:6379> BF.INFO bloom:user:ids
  1) Capacity              # 配置的容量
  2) Size                  # 位数组实际大小
  3) Number of filters     # 子过滤器数量（Scalable Bloom Filter 特性）
@@ -191,22 +191,22 @@ redis-cli -p 16379 -a ghl
  5) Expansion rate        # 扩容比例
 
 # 2. 验证预填的演示数据
-127.0.0.1:16379> BF.EXISTS bloom:user:ids 1001
+127.0.0.1:6379> BF.EXISTS bloom:user:ids 1001
 (integer) 1              # ← 可能存在（我们确实添加过）
 
-127.0.0.1:16379> BF.EXISTS bloom:user:ids 1005
+127.0.0.1:6379> BF.EXISTS bloom:user:ids 1005
 (integer) 1
 
 # 3. 验证"一定不存在"
-127.0.0.1:16379> BF.EXISTS bloom:user:ids 9999
+127.0.0.1:6379> BF.EXISTS bloom:user:ids 9999
 (integer) 0              # ← 一定不存在（从未添加过）
 
 # 4. 查看 key 是否存在
-127.0.0.1:16379> EXISTS bloom:user:ids
+127.0.0.1:6379> EXISTS bloom:user:ids
 (integer) 1              # ← key 存在
 
 # 5. 查看 key 类型（RedisBloom 注册了自定义类型）
-127.0.0.1:16379> TYPE bloom:user:ids
+127.0.0.1:6379> TYPE bloom:user:ids
 MBbloom--                # ← 自定义类型，不是普通的 string/hash
 ```
 
