@@ -1,0 +1,11 @@
+# ====================================================================
+# Spring Boot 自动配置 SPI 注册文件
+#
+# 文件位置：META-INF/spring.factories（必须位于 classpath 根目录下）
+#
+# 这是 Spring Boot Starter 的"入场券"！
+# 如果没有这个文件，Spring Boot 永远不会知道
+# DesensitizeAutoConfiguration 的存在，自动配置就不会生效。
+# ====================================================================
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.example.desensitize.config.DesensitizeAutoConfiguration

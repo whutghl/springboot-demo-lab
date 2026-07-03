@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ============================================================
+         父工程：spring-boot-starter-parent
+         提供了依赖管理（版本锁定）、插件配置、编译配置等。
+         此处使用 2.7.x 的最新 release 2.7.18。
+         ============================================================ -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/> <!-- 从仓库中查找父 POM，而非本地 -->
+    </parent>
+
+    <!-- ============================================================
+         Starter 模块的坐标
+         groupId    : 组织名，通常为公司域名倒写
+         artifactId : 该 Starter 的唯一标识
+                      命名规范：xxx-spring-boot-starter
+         version    : 1.0.0（正式版）
+         ============================================================ -->
+    <groupId>com.example</groupId>
+    <artifactId>mygreeting-spring-boot-starter</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>MyGreeting Spring Boot Starter</name>
+    <description>一个最简化的自定义 Spring Boot Starter 示例——自动装配问候服务</description>
+
+    <properties>
+        <java.version>1.8</java.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- ============================================================
+             核心依赖：spring-boot-autoconfigure
+             - 提供了 @EnableAutoConfiguration 背后的所有基础设施
+             - 提供了 @ConditionalOnClass / @ConditionalOnMissingBean / @ConfigurationProperties 等
+             - 是编写任何 Starter 的必需品
+             ============================================================ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <!-- 版本由 parent 统一管理，无需显式指定 -->
+        </dependency>
+
+        <!-- ============================================================
+             配置处理器（可选，但强烈推荐）
+             作用：在编译时生成 spring-configuration-metadata.json，
+             让 IDE（IDEA / VS Code）在 application.properties 中输入
+             自定义属性时有自动补全和文档提示。
+             引入后需要在 Maven 的 plugins 中激活 annotation processor。
+             ============================================================ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional> <!-- 不会被传递依赖 -->
+        </dependency>
+
+        <!-- ============================================================
+             测试依赖
+             ============================================================ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 编译插件，绑定 annotation processor（configuration-processor） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>2.7.18</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

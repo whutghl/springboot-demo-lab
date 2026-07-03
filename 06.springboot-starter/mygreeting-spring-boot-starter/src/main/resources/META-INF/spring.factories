@@ -1,0 +1,45 @@
+# ====================================================================
+# Spring Boot 自动配置 SPI 注册文件
+#
+# 文件位置：META-INF/spring.factories（必须位于 classpath 根目录下）
+#
+# 这是 Spring Boot Starter 的"入场券"！
+# 如果没有这个文件，Spring Boot 永远不会知道 GreetingAutoConfiguration
+# 的存在，自动配置就不会生效。
+#
+# ─────────────────────────────────────────────────────────────────────
+# 【SPI 机制详解 —— 什么是 SPI？】
+#
+# SPI 全称：Service Provider Interface（服务提供者接口）
+#
+# 这是 Java 内置的一种"服务发现"机制。
+# 它的核心思想是：
+#   服务提供者（也就是我们，Starter 的作者）在 jar 包的
+#   META-INF/services/ 目录下放置一个文件，文件名是"接口的全限定名"，
+#   文件内容是实现类的全限定名。Java 的 ServiceLoader 类会在运行时
+#   扫描所有 jar 包中的这些文件，加载实现类。
+#
+# Spring Boot 借鉴（并扩展）了这一思想，创造了"spring.factories"文件：
+#   - 文件名固定为 spring.factories
+#   - 文件格式是标准的 properties 格式（key=value）
+#   - key 是"触发点"注解的全限定名，比如：
+#       org.springframework.boot.autoconfigure.EnableAutoConfiguration
+#   - value 是自动配置类的全限定名（多个用逗号分隔）
+#
+# 启动流程如下：
+# 1. SpringApplication.run() 被调用
+# 2. 内部创建 SpringApplicationRunListeners -> 发送 ApplicationStartingEvent
+# 3. 创建 Environment，准备 ApplicationContext
+# 4. 调用 AbstractApplicationContext.refresh() -> invokeBeanFactoryPostProcessors
+# 5. 关键：调用 AutoConfigurationImportSelector.selectImports()
+# 6. 该方法使用 SpringFactoriesLoader.loadFactoryNames() 扫描所有 jar 包
+#    中的 META-INF/spring.factories 文件
+# 7. 找到 key = EnableAutoConfiguration 对应的所有 value（自动配置类全限定名）
+# 8. 按 @AutoConfigureOrder、@AutoConfigureAfter 等排序后，逐个加载
+# 9. 每个自动配置类内的 @Bean 方法被处理，Bean 被注册到容器
+#
+# 这就是为什么我们只需要添加这个文件，Spring Boot 就能发现并加载我们的 Starter！
+# ─────────────────────────────────────────────────────────────────────
+# ====================================================================
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.example.greeting.GreetingAutoConfiguration
