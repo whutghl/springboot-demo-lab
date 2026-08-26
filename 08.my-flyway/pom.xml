@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>my-flyway</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>my-flyway</name>
+    <description>Flyway 数据库迁移教学示例（基于最简 spdemo 拷贝改造）</description>
+
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            Flyway 教学核心：
+            1. flyway-core 负责在应用启动时自动执行 src/main/resources/db/migration 下的 SQL 脚本
+            2. 版本由 spring-boot-starter-parent 统一管理（2.7.18 对应 Flyway 8.5.13）
+            3. ⚠️ 重点：MySQL 支持从 Flyway 8.2 起被拆到了独立的 flyway-mysql 模块
+               （原因：MySQL 驱动是 GPL 许可，Flyway 单独成模块规避传染），
+               所以 flyway-core + MySQL 必须显式加 flyway-mysql，否则启动报
+               "Unsupported Database: MySQL 8.0"。H2 / PostgreSQL 则无需额外模块。
+        -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
+        <!--
+            MySQL 8 驱动：连接真实数据库。
+            版本由 spring-boot-starter-parent 统一管理（2.7.18 对应 8.0.33），无需写版本号。
+            注意：Spring Boot 2.7.8+ 把 MySQL 驱动坐标从 mysql:mysql-connector-java
+            迁移到了 com.mysql:mysql-connector-j（旧坐标在依赖管理中已移除）。
+            教学对比：此前的 H2 内存库「零安装、启动即用」，适合先理解 Flyway 机制；
+            真实项目用 MySQL/PostgreSQL，迁移脚本随之使用对应数据库方言（见 db/migration）。
+        -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--
+            MyBatis-Plus 用于在 Java 侧读写 Flyway 建好的表。
+            关键教学点：MyBatis-Plus 默认不管理表结构（没有 ddl-auto 自动建表机制），
+            Flyway 是表结构的唯一权威，MyBatis-Plus 只负责 CRUD，二者职责天然分离。
+            版本说明：mybatis-plus-boot-starter 3.5.x 对应 Spring Boot 2.x。
+        -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.5.3.1</version>
+        </dependency>
+
+        <!--
+            Lombok：用 @Data 等注解消除实体类的 getter/setter 样板代码。
+            版本由 spring-boot-starter-parent 统一管理，无需手写版本号。
+            optional=true 表示该依赖只参与编译，不会传递到使用本项目的下游。
+        -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
