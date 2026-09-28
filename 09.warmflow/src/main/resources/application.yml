@@ -1,0 +1,51 @@
+# ============================================================
+# 主配置：环境无关的通用配置（入库、随代码走）
+#   - 端口、MyBatis-Plus、Warm-Flow 引擎配置
+#   - 数据库连接（含账号密码）放在下面，作为默认值；
+#     本机敏感配置可在 application-dev.yml 中覆盖（dev 后加载，覆盖主配置）
+# ============================================================
+
+server:
+  port: 10000
+
+# 激活开发环境 profile（加载 application-dev.yml，其值会覆盖主配置的相同项）
+spring:
+  profiles:
+    active: dev
+
+  # ------------------------------------------------------------
+  # 数据源配置（默认值）
+  #   这里放一份默认的数据库连接，保证没有 application-dev.yml 时也能启动。
+  #   本机要改账号/密码时，在 application-dev.yml 里覆盖即可
+  #   （dev 文件后加载，相同的 key 会覆盖主配置）。
+  #   application-dev.yml 已加入 .gitignore，避免本地敏感信息误提交。
+  # ------------------------------------------------------------
+  datasource:
+    # 数据库 warm_flow_demo 需先执行 src/main/resources/db/init.sql 创建
+    url: jdbc:mysql://localhost:3306/warm_flow_demo?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: 
+    password: 
+
+# ============================================================
+# MyBatis-Plus 配置
+#   map-underscore-to-camel-case：数据库下划线列名 <-> Java 驼峰属性名自动映射
+#   log-impl：控制台打印执行的 SQL，方便观察 warm-flow 引擎和业务 CRUD 生成的语句
+# ============================================================
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# ============================================================
+# Warm-Flow 配置
+#   enabled           是否启用工作流（默认 true）
+#   banner            是否显示启动 banner
+#   key-type          ID 生成器：SnowId14 / SnowId15 / SnowFlake19（雪花）
+#   data-source-type  数据源方言，mybatis-plus 场景固定 mysql
+# ============================================================
+warm-flow:
+  enabled: true
+  banner: true
+  key-type: SnowId19
+  data-source-type: mysql

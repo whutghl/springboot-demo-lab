@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warm-Flow 请假审批流转验证台</title>
+<style>
+  :root {
+    --bg: #f0f2f7;
+    --card: #ffffff;
+    --primary: #2f6fed;
+    --primary-dark: #1e54c8;
+    --ok: #16a34a;
+    --err: #dc2626;
+    --warn: #d97706;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #1e54c8 0%, #2f6fed 60%, #5b8def 100%);
+    color: #fff;
+    padding: 22px 32px;
+    box-shadow: 0 2px 12px rgba(30, 84, 200, .25);
+  }
+  header h1 { font-size: 20px; font-weight: 600; }
+  header p { font-size: 13px; opacity: .85; margin-top: 4px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 48px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+  .card + .card { margin-top: 20px; }
+  .card h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card h2 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); display: inline-block; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input, select, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border .15s, box-shadow .15s;
+    background: #fff;
+    color: var(--text);
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(47, 111, 237, .12);
+  }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #fff;
+    background: var(--primary);
+    transition: background .15s, transform .05s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.ok { background: var(--ok); }
+  .btn.ok:hover { background: #12843b; }
+  .btn.err { background: var(--err); }
+  .btn.err:hover { background: #b91c1c; }
+  .btn.ghost { background: #fff; color: var(--text); border: 1px solid var(--border); }
+  .btn.ghost:hover { background: #f5f6f8; }
+  .btn.sm { padding: 6px 12px; font-size: 13px; }
+
+  /* 列表 */
+  .list { max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .item:last-child { border-bottom: none; }
+  .item:hover { background: #f5f7fb; }
+  .item.active { background: #eaf0fe; box-shadow: inset 3px 0 0 var(--primary); }
+  .item .who { font-weight: 600; font-size: 14px; min-width: 60px; }
+  .item .meta { font-size: 12px; color: var(--muted); flex: 1; }
+  .item .node { font-size: 12px; color: var(--primary-dark); background: #eaf0fe; padding: 3px 8px; border-radius: 20px; }
+  .badge { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .badge.blue  { background: #dbeafe; color: #1d4ed8; }
+  .badge.green { background: #dcfce7; color: #15803d; }
+  .badge.red   { background: #fee2e2; color: #b91c1c; }
+  .badge.gray  { background: #f3f4f6; color: #4b5563; }
+  .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 28px 0; }
+
+  /* 详情 */
+  .kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; margin-bottom: 14px; }
+  .kv .k { font-size: 12px; color: var(--muted); }
+  .kv .v { font-size: 14px; font-weight: 500; word-break: break-all; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .tabs .tab {
+    padding: 6px 14px; font-size: 13px; border-radius: 20px; cursor: pointer;
+    background: #f3f4f6; color: var(--muted); border: 1px solid transparent; transition: all .15s;
+  }
+  .tabs .tab.on { background: var(--primary); color: #fff; }
+  .mini-list { max-height: 180px; overflow-y: auto; font-size: 13px; }
+  .mini-list .m-item {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px;
+    display: flex; justify-content: space-between; gap: 10px; align-items: center;
+  }
+  .mini-list .m-item .who { font-size: 13px; font-weight: 600; }
+  .mini-list .m-item .info { font-size: 12px; color: var(--muted); }
+  .mini-list .m-item .msg { font-size: 12px; color: var(--text); }
+
+  /* 日志 */
+  #log { max-height: 260px; overflow-y: auto; background: #0f172a; color: #cbd5e1;
+         border-radius: 8px; padding: 12px; font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+         font-size: 12px; line-height: 1.7; }
+  #log .req { color: #93c5fd; }
+  #log .ok  { color: #4ade80; }
+  #log .err { color: #f87171; }
+  #log .info{ color: #94a3b8; }
+  #log .json { color: #e2e8f0; white-space: pre-wrap; word-break: break-all; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Warm-Flow 请假审批流转验证台</h1>
+  <p>先点「⓪ 导入并发布流程定义」，再 发起 → 组长审批 → 经理审批 → 结束（支持退回），全程鼠标点点点</p>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+
+    <!-- 左列：初始化 + 发起 + 审批 + 日志 -->
+    <div>
+      <div class="card">
+        <h2><span class="dot" style="background:#16a34a"></span>⓪ 初始化流程定义</h2>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:4px">
+          首次使用先执行此步：把 <code>db/leaveFlow.xml</code> 导入数据库并发布。流程引擎的「导入 → 发布」两步就发生在这里。
+        </div>
+        <div id="initState" style="font-size:13px;color:var(--ok);margin-bottom:10px;white-space:pre-line">检测中…</div>
+        <button class="btn" id="btnInit">导入并发布流程定义</button>
+      </div>
+
+      <div class="card">
+        <h2><span class="dot"></span>① 发起请假</h2>
+        <div class="row">
+          <div><label>申请人</label><input id="applicant" value="张三" placeholder="申请人姓名"></div>
+          <div style="max-width:110px"><label>天数</label><input id="days" type="number" value="3" min="1"></div>
+        </div>
+        <label>请假事由</label>
+        <input id="reason" value="家中有事，回家一趟" placeholder="请假事由">
+        <div style="margin-top:14px">
+          <button class="btn" id="btnStart">发起请假</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="dot"></span>② 审批操作</h2>
+        <div id="approveHint" style="font-size:13px;color:var(--muted);margin-bottom:4px">先从右侧列表选择一条请假单</div>
+        <div style="font-size:12px;color:var(--warn);background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;margin-bottom:4px">
+          提示：组长节点不支持退回（引擎禁止退回开始节点）；「退回」请用经理节点验证（经理退回后单据回到组长）
+        </div>
+        <div class="row">
+          <div><label>审批角色</label>
+            <select id="role">
+              <option value="role:leader">组长审批 (role:leader)</option>
+              <option value="role:manager">经理审批 (role:manager)</option>
+            </select>
+          </div>
+          <div><label>审批人</label><input id="operator" value="组长" placeholder="审批人姓名"></div>
+        </div>
+        <label>审批意见</label>
+        <input id="message" value="同意" placeholder="审批意见">
+        <div class="row" style="margin-top:14px">
+          <button class="btn ok" id="btnPass" disabled>✓ 通过 (PASS)</button>
+          <button class="btn err" id="btnReject" disabled>✗ 退回 (REJECT)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="dot" style="background:#64748b"></span>请求日志</h2>
+        <div id="log">等待操作…</div>
+      </div>
+    </div>
+
+    <!-- 右列：列表 + 详情 -->
+    <div>
+      <div class="card">
+        <h2><span class="dot"></span>③ 请假单列表
+          <button class="btn ghost sm" id="btnRefresh" style="margin-left:auto">刷新</button>
+        </h2>
+        <div class="list" id="list"><div class="empty">加载中…</div></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="dot"></span>④ 单据详情 & 流转轨迹</h2>
+        <div id="detail">
+          <div class="empty">点击左侧列表中的请假单查看详情</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  const BASE = '';
+  let selected = null;       // 当前选中的请假单
+  let selectedTab = 'todo';  // 详情面板当前 tab
+
+  const $ = id => document.getElementById(id);
+  const el = (tag, cls, text) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  };
+
+  /* ---------- 请求 ---------- */
+  async function api(path, params) {
+    const url = BASE + path + (params ? '?' + new URLSearchParams(params).toString() : '');
+    log(`GET ${url}`, 'req');
+    try {
+      const resp = await fetch(url);
+      const data = await resp.json().catch(() => ({}));
+      if (data.code === 200) log(JSON.stringify(data, null, 1), 'ok');
+      else log(JSON.stringify(data, null, 1), 'err');
+      return data;
+    } catch (e) {
+      log('请求失败：' + e.message, 'err');
+      return { code: -1, message: e.message };
+    }
+  }
+
+  /* ---------- 日志 ---------- */
+  function log(text, cls) {
+    const box = $('log');
+    const line = el('div', cls);
+    line.innerHTML = '';
+    if (text.startsWith('GET ')) {
+      line.appendChild(document.createTextNode('→ ' + text + '\n'));
+    } else {
+      line.appendChild(document.createTextNode('  ↳ '));
+      const pre = el('span', 'json');
+      pre.textContent = text;
+      line.appendChild(pre);
+    }
+    box.prepend(line);
+  }
+
+  /* ---------- 状态徽章 ---------- */
+  const STATUS = {
+    '0': ['待提交', 'gray'], '1': ['审批中', 'blue'], '2': ['已通过', 'green'],
+    '8': ['已完成', 'green'], '9': ['已退回', 'red']
+  };
+  function badge(flowStatus) {
+    const s = STATUS[flowStatus] || [flowStatus || '未知', 'gray'];
+    const b = el('span', 'badge ' + s[1], s[0]);
+    return b;
+  }
+
+  /* ---------- 列表 ---------- */
+  async function loadList() {
+    const data = await api('/leave/list');
+    const list = $('list');
+    list.innerHTML = '';
+    const leaves = data && data.data;
+    if (!Array.isArray(leaves) || leaves.length === 0) {
+      list.appendChild(el('div', 'empty', '暂无请假单，先在左侧发起一条吧'));
+      return;
+    }
+    leaves.forEach(lv => {
+      const item = el('div', 'item' + (selected && selected.id === lv.id ? ' active' : ''));
+      item.appendChild(el('div', 'who', esc(lv.applicant)));
+      const meta = el('div', 'meta');
+      meta.appendChild(document.createTextNode(
+        '#' + lv.id + ' · ' + lv.days + ' 天 · ' + esc(lv.reason || '') + (lv.instanceId ? '' : ' · 未启动')));
+      item.appendChild(meta);
+      if (lv.nodeName) item.appendChild(el('span', 'node', esc(lv.nodeName)));
+      item.appendChild(badge(lv.flowStatus));
+      item.onclick = () => { selected = lv; refreshSelection(); };
+      list.appendChild(item);
+    });
+    if (selected && !leaves.some(l => l.id === selected.id)) selected = null;
+    updateApproveButtons();
+  }
+
+  /* ---------- 详情 ---------- */
+  async function loadDetail() {
+    if (!selected) return;
+    const d = $('detail');
+    d.innerHTML = '';
+
+    const card = el('div');
+    const kv = el('div', 'kv');
+    const rows = [
+      ['请假单ID', '#' + selected.id],
+      ['申请人', esc(selected.applicant)],
+      ['请假天数', selected.days + ' 天'],
+      ['请假事由', esc(selected.reason || '-')],
+      ['流程实例ID', selected.instanceId || '-'],
+      ['当前节点', esc(selected.nodeName || '-') + ' (' + esc(selected.nodeCode || '-') + ')'],
+      ['流程状态', ''],
+      ['业务主键关联', 't_leave.instance_id → flow_instance']
+    ];
+    rows.forEach(([k, v]) => {
+      const kd = el('div', 'k', k);
+      const vd = el('div', 'v');
+      if (k === '流程状态') { vd.appendChild(badge(selected.flowStatus)); }
+      else { vd.textContent = v; }
+      kv.appendChild(kd); kv.appendChild(vd);
+    });
+    card.appendChild(kv);
+
+    const tabs = el('div', 'tabs');
+    ['todo', 'history'].forEach(t => {
+      const tab = el('span', 'tab' + (selectedTab === t ? ' on' : ''), t === 'todo' ? '待办任务' : '审批历史');
+      tab.onclick = () => { selectedTab = t; loadDetail(); };
+      tabs.appendChild(tab);
+    });
+    card.appendChild(tabs);
+
+    const body = el('div', 'mini-list');
+    body.appendChild(el('div', 'empty', '加载中…'));
+    d.appendChild(card);
+
+    if (selectedTab === 'todo') {
+      const data = await api('/leave/todo', { instanceId: selected.instanceId });
+      body.innerHTML = '';
+      const tasks = data && data.data && data.data.tasks;
+      if (!tasks || tasks.length === 0) {
+        body.appendChild(el('div', 'empty', '无待办任务（流程可能已结束）'));
+      } else {
+        tasks.forEach(t => {
+          const m = el('div', 'm-item');
+          const left = el('div');
+          left.appendChild(el('div', 'who', '办理人：' + esc(t.handler || '-') + '  ·  节点：' + esc(t.nodeName || '-')));
+          left.appendChild(el('div', 'info', 'taskId=' + t.id + ' · instanceId=' + t.instanceId +
+            (t.permissionFlag ? ' · 权限=' + t.permissionFlag : '')));
+          m.appendChild(left);
+          body.appendChild(m);
+        });
+      }
+    } else {
+      const data = await api('/leave/history', { instanceId: selected.instanceId });
+      body.innerHTML = '';
+      const his = data && data.data && data.data.history;
+      if (!his || his.length === 0) {
+        body.appendChild(el('div', 'empty', '暂无审批历史'));
+      } else {
+        [...his].reverse().forEach(h => {
+          const m = el('div', 'm-item');
+          const left = el('div');
+          left.appendChild(el('div', 'who',
+            '[' + esc(h.nodeName || '-') + '] ' + esc(h.handler || '-') +
+            (h.flowStatus === '2' ? ' · 通过' : h.flowStatus === '9' ? ' · 退回' : '')));
+          const msg = h.message;
+          if (msg) left.appendChild(el('div', 'msg', '意见：' + esc(msg)));
+          left.appendChild(el('div', 'info', 'hisTaskId=' + h.id + ' · ' + (h.createTime || '')));
+          m.appendChild(left);
+          body.appendChild(m);
+        });
+      }
+    }
+    d.appendChild(body);
+  }
+
+  /* ---------- 审批 ---------- */
+  function currentRoleName(flag) {
+    return flag === 'role:manager' ? '经理' : '组长';
+  }
+  function refreshSelection() {
+    $('approveHint').textContent = selected
+      ? '已选择：#' + selected.id + ' ' + selected.applicant + ' · 当前节点「' + (selected.nodeName || '-') + '」'
+      : '先从右侧列表选择一条请假单';
+    updateApproveButtons();
+    loadDetail();
+    // 列表高亮
+    Array.from($('list').children).forEach(c =>
+      c.classList.toggle('active', selected && c.textContent.includes('#' + selected.id)));
+    loadList(); // 简化：重新拉列表以同步状态
+  }
+  function updateApproveButtons() {
+    $('btnPass').disabled = !selected;
+    $('btnReject').disabled = !selected;
+  }
+
+  async function doApprove(pass) {
+    if (!selected) return;
+    const role = $('role').value;
+    const btn = pass ? $('btnPass') : $('btnReject');
+    btn.disabled = true;
+    const data = await api('/leave/approve', {
+      leaveId: selected.id,
+      pass: pass,
+      operatorId: $('operator').value || currentRoleName(role),
+      permissionFlag: role,
+      message: $('message').value
+    });
+    btn.disabled = false;
+    // 若角色与当前节点不匹配，后端会报错，提示用户
+    if (data.code !== 200 && data.message) {
+      log('提示：' + data.message, 'info');
+    }
+    if (data.code === 200) {
+      await loadList();
+      await loadDetail();
+    }
+  }
+
+  /* ---------- XSS 转义 ---------- */
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  async function initFlow(manual) {
+    const btn = $('btnInit');
+    if (manual) btn.disabled = true;
+    const data = await api('/leave/init');
+    const state = $('initState');
+    if (data.code === 200 && data.data) {
+      const s = data.data;
+      state.textContent = [s.step1, s.step2].filter(Boolean).join('\n');
+      state.style.color = 'var(--ok)';
+    } else {
+      state.textContent = data.message || '初始化失败，请看上方日志';
+      state.style.color = 'var(--err)';
+    }
+    if (manual) btn.disabled = false;
+  }
+  $('btnInit').onclick = () => initFlow(true);
+  $('btnStart').onclick = async () => {
+    const btn = $('btnStart');
+    btn.disabled = true;
+    const data = await api('/leave/start', {
+      applicant: $('applicant').value,
+      days: $('days').value,
+      reason: $('reason').value
+    });
+    btn.disabled = false;
+    if (data.code === 200) await loadList();
+  };
+  $('btnPass').onclick = () => doApprove(true);
+  $('btnReject').onclick = () => doApprove(false);
+  $('btnRefresh').onclick = loadList;
+
+  /* ---------- 初始化 ---------- */
+  initFlow(false); // 页面加载时自动检测一次（幂等：已存在则跳过）
+  loadList();
+})();
+</script>
+</body>
+</html>

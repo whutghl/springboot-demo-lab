@@ -1,0 +1,22 @@
+# ============================================================
+# 本地敏感配置：数据库账号密码等，禁止提交
+# 新 clone 项目后需自行创建此文件（可参考 application-dev.yml 里的注释）
+# ============================================================
+src/main/resources/application-dev.yml
+
+# Maven 构建产物
+target/
+
+# IDE 配置
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+#ai
+.codebuddy
+
+# 日志
+*.log

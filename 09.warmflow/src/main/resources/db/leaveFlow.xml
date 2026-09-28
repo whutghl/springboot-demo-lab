@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ============================================================
+     Warm-Flow 请假审批流程定义（XML 格式，1.3.3 版引擎）
+     ============================================================
+     根元素 <definition> 属性：flowCode（流程编码，启动时用）、flowName、version
+     节点 <node> 属性：
+       nodeType       节点类型：start开始 / between中间 / end结束 / serial互斥网关 / parallel并行网关
+       nodeCode       节点编码（唯一）
+       nodeName       节点名称
+       permissionFlag 办理人权限标识（如 role:leader，审批时用 FlowParams.permissionFlag 传入办理人权限以通过校验）
+     节点内 <skip> 跳转线：
+       skipName  跳转名称
+       skipType  PASS审批通过 / REJECT退回
+       skipCondition 跳转条件（本案例未使用条件分支）
+       元素文本 = 下一个节点编码（nextNodeCode）
+     ============================================================
+     本流程拓扑：
+       开始(start) → 组长审批(leaderAudit) → 经理审批(managerAudit) → 结束(end)
+       组长审批：PASS 前往经理审批（引擎禁止退回开始节点，故组长无退回）
+       经理审批：PASS 前往结束；REJECT 退回组长审批
+     ============================================================ -->
+<definition flowCode="leaveFlow" flowName="请假审批流程" version="1" category="请假">
+
+    <!-- 开始节点（warm-flow 要求开始节点必须有跳转规则，否则启动时报
+         "开始和中间节点必须有跳转规则"） -->
+    <node nodeType="start" nodeCode="start" nodeName="开始">
+        <skip skipName="发起">leaderAudit</skip>
+    </node>
+
+    <!-- 组长审批节点（办理人权限标识 role:leader）
+         注意：warm-flow 1.3.x 禁止退回到第一个节点（开始节点），
+         组长作为第一个审批节点，其上一个节点就是 start，故不配置 REJECT 退回 -->
+    <node nodeType="between" nodeCode="leaderAudit" nodeName="组长审批" permissionFlag="role:leader">
+        <skip skipName="通过" skipType="PASS">managerAudit</skip>
+    </node>
+
+    <!-- 经理审批节点（办理人权限标识 role:manager） -->
+    <node nodeType="between" nodeCode="managerAudit" nodeName="经理审批" permissionFlag="role:manager">
+        <skip skipName="通过" skipType="PASS">end</skip>
+        <skip skipName="退回" skipType="REJECT">leaderAudit</skip>
+    </node>
+
+    <!-- 结束节点 -->
+    <node nodeType="end" nodeCode="end" nodeName="结束"/>
+
+</definition>

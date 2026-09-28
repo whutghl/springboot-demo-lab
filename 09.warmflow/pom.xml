@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>workflow</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>workflow</name>
+    <description>Warm-Flow 国产轻量级工作流引擎教学示例</description>
+
+    <properties>
+        <java.version>1.8</java.version>
+        <warm-flow.version>1.3.3</warm-flow.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            Warm-Flow 教学核心：
+            1. warm-flow-mybatis-plus-sb-starter 是「Spring Boot 2 + MyBatis-Plus」的官方 starter，
+               引入后自动配置生效（无需 @EnableWarmFlow 注解），核心 Service Bean 可直接注入。
+            2. 它自包含核心引擎（warm-flow-core）+ ORM 适配（warm-flow-mybatis-plus-core）
+               + Spring 自动配置（warm-flow-plugin-modes-sb）。
+            3. groupId 是 org.dromara（非 org.dromara.warm，后者为文档站展示的发布渠道）。
+            4. Spring Boot 3 请换用 warm-flow-mybatis-plus-sb3-starter。
+        -->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>warm-flow-mybatis-plus-sb-starter</artifactId>
+            <version>${warm-flow.version}</version>
+            <!--
+                排除 warm-flow 传递依赖的 mybatis-plus-extension 3.5.1，
+                统一使用下方显式声明的 3.5.3.1，避免 core 版本冲突
+                （否则启动报 ClassNotFoundException: PostInitTableInfoHandler）。
+            -->
+            <exclusions>
+                <exclusion>
+                    <groupId>com.baomidou</groupId>
+                    <artifactId>mybatis-plus-extension</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!--
+            MyBatis-Plus：warm-flow 引擎表 + 业务表的 ORM 读写。
+            引擎自身的 ORM 层已由 starter 自带，这里额外引入是为了给「业务请假表」写 CRUD。
+            注意版本兼容：mybatis-plus 3.5.x 对应 Spring Boot 2.x。
+        -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.5.3.1</version>
+        </dependency>
+
+        <!-- MySQL 8 驱动：连接真实数据库。版本由 spring-boot-starter-parent 统一管理。 -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Lombok：用 @Data 等注解消除实体类样板代码。 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
